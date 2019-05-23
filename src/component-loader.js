@@ -17,7 +17,8 @@ export default class ComponentLoader {
 
 		const defaults = {
 			contextEl: document,
-			prefix: ''
+			prefix: '',
+			suffix: 'component'
 		}
 
 		// TODO use prefix
@@ -136,7 +137,7 @@ export default class ComponentLoader {
 	 */
 	scan(data = {}) {
 		const activeComponents = {},
-		      elements = this.options.contextEl.querySelectorAll(`[data-${this.options.prefix}component]`);
+				elements = this.options.contextEl.querySelectorAll(`[data-${this.options.prefix + this.options.suffix}]`);
 
 		([]).forEach.call(elements, (el) => {
 			this._scanElement(el, activeComponents, data);
@@ -155,24 +156,26 @@ export default class ComponentLoader {
 	 */
 	_scanElement(el, activeComponents, data) {
 		// check of component(s) for this DOM element already have been initialized
-		let elementId = el.getAttribute(`data-${this.options.prefix}component-id`);
+		let elementId = el.getAttribute(`data-${this.options.prefix+this.options.suffix}-id`);
 
 		if (!elementId) {
 			// give unique id so we can track it on next scan
 			elementId = this._generateUUID();
-			el.setAttribute(`data-${this.options.prefix}component-id`, elementId);
+			el.setAttribute(`data-${this.options.prefix+this.options.suffix}-id`, elementId);
 		}
 
 		// find the name of the component instance
-		const componentList = el.getAttribute(`data-${this.options.prefix}component`).match(/\S+/g);
-		componentList.forEach( (componentName) => {
+		const componentList = el.getAttribute(`data-${this.options.prefix + this.options.suffix}`).match(/\S+/g);
 
-			const componentId = `${componentName}-${elementId}`;
+		componentList.forEach( (componentName) => {
+			const componentEl = /[^/]*$/.exec(componentName)[0];
+			const componentId = `${componentEl}-${elementId}`;
+
 			activeComponents[componentId] = true;
 
 			// check if component not initialized before
 			if (!this.initializedComponents[componentId]) {
-				this._initializeComponent(componentName, componentId, el, data)
+				this._initializeComponent(componentEl, componentId, el, data)
 			}
 
 		});
